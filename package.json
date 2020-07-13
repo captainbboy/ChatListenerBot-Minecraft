@@ -1,6 +1,6 @@
 {
   "name": "freechatlistenerbot",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Use this bot to track special messages like koths, envoys, etc.",
   "main": "index.js",
   "scripts": {
