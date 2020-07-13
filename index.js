@@ -15,63 +15,56 @@ const minecraftBot = mineflayer.createBot({
   version: settings.minecraftbot.version
 });
 
-minecraftBot.on("login", async => {
-    console.log(`Minecraft Bot logged in!`)
+minecraftBot.on("login", async =>{
+  console.log(`Minecraft Bot logged in!`)
+  minecraftBot.chat(settings.minecraftbot.hubcommand)
+
+  // Every 60 seconds send the hub command:
+  setInterval(() => {
     settings = reload(`./settings.json`)
     minecraftBot.chat(settings.minecraftbot.hubcommand)
-    
-    setInterval(() => {
-        settings = reload(`./settings.json`)
-        minecraftBot.chat(settings.minecraftbot.hubcommand)
-    }, 60000);
+  }, 60000);
 })
 
 minecraftBot.on("message", json => {
   let message = "";
-
   if (json.extra != null) {
     json.extra.forEach(text => {
       if (text != null) {
-        message += text;1
+        message += text;
       }
     })
   }
 
-  if (message.replace(/\s/g, '').length > 1) {
-    if (message.length > 1){
-      console.log(message)
-    }
-  }  else return
+  if (message.replace(/\s/g, '').length <= 1 || message.length <= 1) return
+  console.log(message)
 
   settings = reload(`./settings.json`)
-  let containsb = false
 
   let array = settings.minecraftbot.blacklistedcharacters
-  for (var i = 0; i < array.length; i++) {
-    if (message.includes(array[i])) return containsb = true;
-  }
+  if (array.some(function(v) {
+      return message.indexOf(v) >= 0;
+    })) return
+  else {
 
-  setTimeout(() => {
-    if (containsb == false) {
-      let array2 = settings.minecraftbot.phrasestotrack
-      for (var i = 0; i < array2.length; i++) {
-        if (message.toLowerCase().includes(array2[i].toLowerCase())) {
+    let array2 = settings.minecraftbot.phrasestotrack
+    if (array2.some(function(v) {
+        return message.indexOf(v) >= 0;
+      })) {
 
-          let alertchannel = client.channels.resolve(settings.discordbot.alertchannelid)
+      let alertchannel = client.channels.resolve(settings.discordbot.alertchannelid)
 
-          if (settings.discordbot.alertroleid !== null && settings.discordbot.alertroleid !== "none") {
-            if(settings.discordbot.tagonalert == true){
-                alertchannel.send(`<@&${settings.discordbot.alertroleid}>`)
-            }
-          }
-
-          setTimeout(() => {
-            alertchannel.send(message)
-          }, 200);
+      if (settings.discordbot.alertroleid !== null && settings.discordbot.alertroleid !== "none") {
+        if (settings.discordbot.tagonalert == true) {
+          alertchannel.send(`<@&${settings.discordbot.alertroleid}>`)
         }
       }
+
+      setTimeout(() => {
+        alertchannel.send(message)
+      }, 200);
     }
-  }, 500);
+  }
 })
 
 // Discord Bot:
@@ -81,9 +74,8 @@ const client = new discord.Client()
 client.login(settings.discordbot.token)
 
 client.on("ready", async =>{
-
   // Log that the discord bot has logged in:
-  console.log(`The Discord Bot is logged in as: ${client.user.tag}`)
+  console.log(`The Discord Bot has logged in as: ${client.user.tag}`)
 
   // Set the activity message:
   if (settings.discordbot.activitymessage !== null && settings.discordbot.activitymessage !== "none") {
@@ -93,12 +85,8 @@ client.on("ready", async =>{
 })
 
 client.on("message", async message => {
-
   // Only listen to some messages:
-  if (message.guild.id !== settings.discordbot.serverid) return
-  if (!message.content.startsWith(settings.discordbot.prefix)) return
-  if (message.content.slice(1) == null) return
-  if (message.author.bot) return
+  if (message.author.bot || message.content.slice(1) == null || message.guild.id !== settings.discordbot.serverid || !message.content.startsWith(settings.discordbot.prefix)) return
 
   // Defining commands:
   const args = argsf(message);
@@ -109,44 +97,30 @@ client.on("message", async message => {
     message.delete()
     settings = reload(`./settings.json`)
     let prefix = settings.discordbot.prefix
-
-    let em = new discord.MessageEmbed()
-      .setColor(settings.discordbot.color)
-      .setTimestamp()
-      .setAuthor("Help")
-      .setThumbnail(client.user.displayAvatarURL())
-      .setDescription(`Commands:\n${prefix}help - This command, lists the commands.\n${prefix}sudo - Make the bot say something ingame.\n${prefix}list - Lists key phrases to find in chat!\n${prefix}removekeyphrase - Removes a key phrase to search for.\n${prefix}addkeyphrase - Adds a key phrase to search for.`)
+    let em = emb(settings.discordbot.color, "Help", `Commands:\n${prefix}help - This command, lists the commands.\n${prefix}sudo - Make the bot say something ingame.\n${prefix}list - Lists key phrases to find in chat!\n${prefix}removekeyphrase - Removes a key phrase to search for.\n${prefix}addkeyphrase - Adds a key phrase to search for.`)
     message.channel.send(em)
   }
 
   if (command == "sudo") {
+    if (!message.member.roles.cache.has(settings.discordbot.adminroleid)) return message.channel.send(`No Permission!`)
     message.delete()
     minecraftBot.chat(args.join(" "))
 
-    let em = new discord.MessageEmbed()
-      .setColor(settings.discordbot.color)
-      .setTimestamp()
-      .setThumbnail(client.user.displayAvatarURL())
-      .setDescription(`The bot said: \`${args.join(" ")}\``)
-      .setAuthor("Sudo")
+    let em = emb(settings.discordbot.color, "Sudo", `The bot said: \`${args.join(" ")}\``)
     message.channel.send(em)
   }
 
   if (command == "list") {
+    if (!message.member.roles.cache.has(settings.discordbot.adminroleid)) return message.channel.send(`No Permission!`)
     message.delete()
     settings = reload("./settings.json")
 
-    let em = new discord.MessageEmbed()
-      .setColor(settings.discordbot.color)
-      .setTimestamp()
-      .setThumbnail(client.user.displayAvatarURL())
-      .setDescription(`Phrases to look for:\n${settings.minecraftbot.phrasestotrack.join(`\n`) || "None!"}`)
-      .setAuthor("Key Phrases")
+    let em = emb(settings.discordbot.color, "Key Phrases", `Phrases to look for:\n${settings.minecraftbot.phrasestotrack.join(`\n`) || "None!"}`)
     message.channel.send(em)
-
   }
 
   if (command == "removekeyphrase") {
+    if (!message.member.roles.cache.has(settings.discordbot.adminroleid)) return message.channel.send(`No Permission!`)
     message.delete()
     settings = reload("./settings.json")
 
@@ -158,18 +132,12 @@ client.on("message", async message => {
     fs.writeFileSync(`./settings.json`, JSON.stringify(settings, null, 2));
 
     settings = reload("./settings.json")
-
-    let em = new discord.MessageEmbed()
-      .setColor(settings.discordbot.color)
-      .setTimestamp()
-      .setThumbnail(client.user.displayAvatarURL())
-      .setDescription(`Updated phrases to look for:\n${settings.minecraftbot.phrasestotrack.join(`\n`) || "None!"}`)
-      .setAuthor("Key Phrases")
+    let em = emb(settings.discordbot.color, "Key Phrases", `Updated phrases to look for:\n${settings.minecraftbot.phrasestotrack.join(`\n`) || "None!"}`)
     message.channel.send(em)
-
   }
 
   if (command == "addkeyphrase") {
+    if (!message.member.roles.cache.has(settings.discordbot.adminroleid)) return message.channel.send(`No Permission!`)
     message.delete()
     settings = reload("./settings.json")
 
@@ -183,14 +151,8 @@ client.on("message", async message => {
 
     settings = reload("./settings.json")
 
-    let em = new discord.MessageEmbed()
-      .setColor(settings.discordbot.color)
-      .setTimestamp()
-      .setThumbnail(client.user.displayAvatarURL())
-      .setDescription(`Updated phrases to look for:\n${settings.minecraftbot.phrasestotrack.join(`\n`) || "None!"}`)
-      .setAuthor("Key Phrases")
+    let em = emb(settings.discordbot.color, "Key Phrases", `Updated phrases to look for:\n${settings.minecraftbot.phrasestotrack.join(`\n`) || "None!"}`)
     message.channel.send(em)
-
   }
 
 })
@@ -205,4 +167,8 @@ function argsf(message) {
 function reload(f) {
   delete require.cache[require.resolve(f)];
   return require(f);
+}
+
+function emb(color, author, desc) {
+  return em = new discord.MessageEmbed().setColor(color).setTimestamp().setAuthor(author).setThumbnail(client.user.displayAvatarURL()).setDescription(desc)
 }
