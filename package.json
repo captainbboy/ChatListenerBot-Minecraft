@@ -1,0 +1,29 @@
+{
+  "name": "freechatlistenerbot",
+  "version": "1.0.0",
+  "description": "Use this bot to track special messages like koths, envoys, etc.",
+  "main": "index.js",
+  "scripts": {
+    "test": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/captainbboy/ChatListenerBot-Minecraft.git"
+  },
+  "keywords": [
+    "Minecraft",
+    "Bot",
+    "Mineflayer"
+  ],
+  "author": "captain_bboy",
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/captainbboy/ChatListenerBot-Minecraft/issues"
+  },
+  "homepage": "https://github.com/captainbboy/ChatListenerBot-Minecraft#readme",
+  "dependencies": {
+    "discord.js": "^12.2.0",
+    "fs": "0.0.1-security",
+    "mineflayer": "^2.23.0"
+  }
+}

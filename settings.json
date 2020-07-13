@@ -1,0 +1,26 @@
+{
+    "minecraftbot": {
+        "minecraftaccountemail": "",
+        "minecraftaccountpass": "",
+        "serverip": "",
+        "port": "25565",
+        "version": "1.8",
+        "hubcommand": "/demonic",
+        "blacklistedcharacters": [
+            ":"
+        ],
+        "phrasestotrack": [
+            "outpost"
+        ]
+    },
+    "discordbot": {
+        "token": "",
+        "prefix": ",",
+        "activitymessage": "Listening for events!",
+        "color": "BLUE",
+        "serverid": "0",
+        "alertchannelid": "0",
+        "alertroleid": "0",
+        "tagonalert": false
+    }
+}
